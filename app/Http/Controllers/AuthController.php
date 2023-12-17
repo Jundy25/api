@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Debtors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -39,9 +41,7 @@ class AuthController extends Controller
      
 public function register(Request $request)
 {try {
-    // Your existing code for registration
 
-    
     $request->validate([
         'name' => 'required|string',
         'email' => 'required|email|unique:users,email',
@@ -66,4 +66,19 @@ public function register(Request $request)
     return response(['message' => $e->getMessage()], 500);
 }
 
-}}
+}
+
+public function debtors()
+{
+    try {
+        $debtors = Debtors::all();
+        return response()->json($debtors);
+    } catch (\Exception $e) {
+        // Log the error
+        \Log::error($e);
+        // Return a meaningful error response
+        return response()->json(['error' => 'Internal Server Error'], 500);
+    }
+}
+
+}
