@@ -30,8 +30,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::get('/debtors', [DebtorsController::class, 'debtors']);
 Route::post('/insertdebtors', [InsertDataController::class, 'store']);
 Route::delete('/deletedebtor/{id}', [InsertDataController::class, 'destroy']);
-Route::get('/categories', [ApiController::class, 'getCategories']);
-Route::get('/items', [ApiController::class, 'getItems']);
-Route::get('uthangs', [ApiController::class, 'uthang']);
+Route::get('/categories', [ItemController::class, 'categories']);
+Route::get('/items', [ItemController::class, 'items']);
+Route::get('uthangs', [UthangController::class, 'uthang']);
 });
 
