@@ -20,6 +20,8 @@ class InsertDataController extends Controller
                 'd_name' => $request->input('d_name'),
                 'phone' => $request->input('phone'),
                 'address' => $request->input('address'),
+                'created_at' => now(),
+
             ]);
 
             // Log success
@@ -33,10 +35,10 @@ class InsertDataController extends Controller
             return response(['message' => $e->getMessage()], 500);
         }
     }
-    public function destroy($id)
+    public function destroy($d_id)
     {
         try {
-            $debtor = Debtors::findOrFail($id);
+            $debtor = Debtors::findOrFail($d_id);
             $debtor->delete();
 
             // Log success

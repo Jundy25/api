@@ -5,26 +5,118 @@
 namespace App\Http\Controllers;
 
 use App\Models\Uthang;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class UthangController extends Controller
 {
-    public function uthang()
+    public function uthangs()
     {
         $uthangs = Uthang::all();
 
         return response()->json($uthangs);
     }
 
-    public function store(Request $request)
+    public function getUthangsByDebtorId($id)
     {
-        $uthang = Uthang::create($request->all());
+        $results = DB::table('uthangs')
+            ->select('uthangs.u_id', 'items.item_name', 'uthangs.quantity', 'uthangs.price', DB::raw('uthangs.quantity * uthangs.price AS total'), DB::raw('DATE_FORMAT(uthangs.added_on, "%m/%d/%y") AS date'))
+            ->join('items', 'uthangs.item_id', '=', 'items.item_id')
+            ->where('uthangs.d_id', $id)
+            ->get();
 
-        return response()->json($uthang, 201);
+        return response()->json($results);
     }
+
+    public function addUthang(Request $request)
+{
+    try {
+        $data = $request->input();
+
+        $itemPrice = Item::where('item_id', $data['item_id'])->value('price');
+        $totalPrice = $itemPrice * $data['quantity'];
+
+        $uthang = new Uthang([
+            'd_id' => $data['d_id'],
+            'item_id' => $data['item_id'],
+            'quantity' => $data['quantity'],
+            'price' => $itemPrice,
+            'total' => $totalPrice,
+            'added_on' => now(),
+            'updated_at' => now(), 
+        ]);
+
+        $uthang->save();
+
+        return response()->json(['message' => 'Uthang added successfully'], 201);
+    } catch (\Exception $e) {
+        \Log::error($e);
+
+        return response(['message' => $e->getMessage()], 500);
+    }
+    
+}
+public function updateUthang(Request $request, $u_id)
+{
+    try {
+        $uthang = Uthang::find($u_id);
+
+        if (!$uthang) {
+            return response()->json(['error' => 'Uthang not found'], 404);
+        }
+
+        $data = $request->only(['quantity', 'item_id']);
+
+        // Update the fields
+        $itemPrice = Item::where('item_id', $data['item_id'])->value('price');
+        $totalPrice = $itemPrice * $data['quantity'];
+
+        $uthang->update([
+            'item_id' => $data['item_id'],
+            'quantity' => $data['quantity'],
+            'price' => $itemPrice,
+            'total' => $totalPrice,
+            'updated_at' => now(),
+        ]);
+
+        // Fetch the updated uthang to include it in the response
+        $updatedUthang = Uthang::find($u_id);
+
+        return response()->json([
+            'message' => 'Uthang updated successfully',
+            'uthang' => $updatedUthang,
+        ], 200);
+    } catch (\Exception $e) {
+        \Log::error($e);
+
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function deleteUthang($u_id)
+    {
+        try {
+            $uthang = Uthang::find($u_id);
+
+            if (!$uthang) {
+                return response()->json(['error' => 'Uthang not found'], 404);
+            }
+
+            $uthang->delete();
+
+            return response()->json(['message' => 'Uthang deleted successfully'], 200);
+        } catch (\Exception $e) {
+            \Log::error($e);
+
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
 
     // Add other methods as needed for update, delete, etc.
 }

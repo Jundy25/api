@@ -29,9 +29,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/debtors', [DebtorsController::class, 'debtors']);
 Route::post('/insertdebtors', [InsertDataController::class, 'store']);
+Route::put('/updatedebtor/{id}', [DebtorsController::class, 'updateDebtor']);
 Route::delete('/deletedebtor/{id}', [InsertDataController::class, 'destroy']);
-Route::get('/categories', [ItemController::class, 'categories']);
 Route::get('/items', [ItemController::class, 'items']);
-Route::get('uthangs', [UthangController::class, 'uthang']);
+Route::get('uthangs', [UthangController::class, 'uthangs']);
+Route::get('/uthangs/{id}', [UthangController::class, 'getUthangsByDebtorId']);
+Route::post('/addutang', [UthangController::class, 'addUthang']);
+Route::put('/updateutang/{id}', [UthangController::class, 'updateUthang']);
+Route::delete('/payutang/{u_id}', [UthangController::class, 'deleteUthang']);
 });
 
