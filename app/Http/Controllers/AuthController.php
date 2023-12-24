@@ -31,8 +31,12 @@ class AuthController extends Controller
 
         $user = $this->model->where('email', $request->email)->first();
         $token = $user->createToken($request->email . Str::random(8))->plainTextToken;
+        $role = $user->role;
 
-        return response(['token' => $token], 200);
+        return response(['token' => $token, 'role' => $role], 200);
+        $user = $request->user(); // Fetch the authenticated user
+
+
     } catch (\Exception $e) {
         return response(['message' => $e->getMessage()], 500); // 500 Internal Server Error
     }

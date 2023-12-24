@@ -13,7 +13,7 @@ class CreateItemsTable extends Migration
         $table->string('item_name');
         $table->decimal('price', 8, 2);
         $table->string('category');
-        $table->timestamps()->nullable()->default(now());
+        $table->timestamps();
     });
 }
 
