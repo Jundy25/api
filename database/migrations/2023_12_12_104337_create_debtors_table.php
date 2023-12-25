@@ -13,7 +13,7 @@ class CreateDebtorsTable extends Migration
             $table->string('d_name')->unique();
             $table->string('phone');
             $table->string('address');
-            $table->timestamps()->nullable()->default(now());
+            $table->timestamps();
         });
     }
 

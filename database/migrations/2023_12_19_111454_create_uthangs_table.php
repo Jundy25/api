@@ -14,7 +14,7 @@ class CreateUthangsTable extends Migration
             $table->unsignedBigInteger('item_id');
             $table->integer('quantity');
             $table->dateTime('added_on');
-            $table->dateTime('updated_at')->nullable()->default(now());
+            $table->dateTime('updated_at');
             $table->foreign('item_id')->references('item_id')->on('items');
             $table->foreign('d_id')->references('d_id')->on('debtors')->onDelete('cascade')->onUpdate('cascade');
             // Add other columns if needed
