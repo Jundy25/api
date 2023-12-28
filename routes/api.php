@@ -8,6 +8,7 @@ use App\Http\Controllers\DebtorsController;
 use App\Http\Controllers\InsertDataController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\UthangController;
+use App\Http\Controllers\SaleController;
 
 
 /*
@@ -27,6 +28,7 @@ use App\Http\Controllers\UthangController;
 Route::prefix('/v1')->group(function(){
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/sales', [SaleController::class, 'sales']);
 Route::get('/debtors', [DebtorsController::class, 'debtors']);
 Route::post('/insertdebtors', [InsertDataController::class, 'store']);
 Route::put('/updatedebtor/{id}', [DebtorsController::class, 'updateDebtor']);

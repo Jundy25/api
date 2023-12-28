@@ -41,12 +41,12 @@ class UthangController extends Controller
         $totalPrice = $itemPrice * $data['quantity'];
 
         $uthang = new Uthang([
-            'd_id' => $data['d_id'],
-            'item_id' => $data['item_id'],
-            'quantity' => $data['quantity'],
-            'price' => $itemPrice,
-            'total' => $totalPrice,
-            'added_on' => now(),
+            'd_id' => $data['d_id'], 
+            'item_id' => $data['item_id'], 
+            'quantity' => $data['quantity'], 
+            'price' => $itemPrice, 
+            'total' => $totalPrice, 
+            'added_on' => now(), 
             'updated_at' => now(), 
         ]);
 
@@ -54,9 +54,13 @@ class UthangController extends Controller
 
         return response()->json(['message' => 'Uthang added successfully'], 201);
     } catch (\Exception $e) {
-        \Log::error($e);
-
-        return response(['message' => $e->getMessage()], 500);
+        if (strpos($e->getMessage(), 'Total price exceeds 1000 for this item') !== false) {
+            return response()->json(['error' => 'Total price exceeds 1000 for this item'], 400);
+        } if (strpos($e->getMessage(), 'Exceeded maximum total of Debt') !== false) {
+            return response()->json(['error' => 'Exceeded maximum total of Debt'], 400);
+        } else {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
     
 }
