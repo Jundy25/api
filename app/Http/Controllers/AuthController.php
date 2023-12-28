@@ -37,7 +37,6 @@ class AuthController extends Controller
         $user = $request->user(); // Fetch the authenticated user
 
 
-        return response(['token' => $token], 200);
     } catch (\Exception $e) {
         return response(['message' => $e->getMessage()], 500); // 500 Internal Server Error
     }
