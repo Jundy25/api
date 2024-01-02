@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Debtors;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class InsertDataController extends Controller
@@ -12,16 +13,26 @@ class InsertDataController extends Controller
         try {
             $request->validate([
                 'd_name' => 'required|unique:debtors',
+                'email' => 'required|unique:debtors,email',
                 'phone' => 'required',
                 'address' => 'required',
             ]);
 
             $debtor = Debtors::create([
                 'd_name' => $request->input('d_name'),
+                'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
                 'address' => $request->input('address'),
+                'role' => 2,
                 'created_at' => now(),
 
+            ]);
+            $user = User::create([
+                'name' => $request->input('d_name'),
+                'email' => $request->input('email'),
+                'password' => $request->input('d_name'),
+                'role' => 2,
+                'created_at' => now(),
             ]);
 
             // Log success

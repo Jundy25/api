@@ -11,4 +11,6 @@ class Sale extends Model
 
     protected $table = 'sales';
     protected $primaryKey = 'sales_id';
+    protected $fillable = ['item_id', 'quantity_sold', 'price', 'sale_date', 'debtor_name'];
+
 }

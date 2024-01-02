@@ -14,8 +14,12 @@ class Debtors extends Model
 
     protected $fillable = [
         'd_name', 
+        'email',
         'phone', 
-        'address',       
+        'address',
+        'data_amount',
+        'last_payment_date',
+        'role_id'     
     ];
     // You can also add other attributes as needed
 

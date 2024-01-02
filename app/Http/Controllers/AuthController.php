@@ -53,7 +53,7 @@ public function register(Request $request)
     ]);
 
     try {
-        $request['role'] = '1';
+        $request['role'] = '2';
         $this->model->create($request->all());
         return response(['message' => "Successfully created"], 201); // 201 Created
     } catch (\Exception $e) {

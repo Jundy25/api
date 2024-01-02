@@ -21,6 +21,8 @@ class ItemsTableSeeder extends Seeder
             ['item_id' => 9, 'item_name' => 'Bleach', 'price' => 45.00, 'category' => 'Cleaning Products'],
             ['item_id' => 10, 'item_name' => 'Soap', 'price' => 25.00, 'category' => 'Cleaning Products'],
             ['item_id' => 11, 'item_name' => 'Beer', 'price' => 120.00, 'category' => 'Alcohol'],
+            ['item_id' => 12, 'item_name' => 'Full Payment', 'price' => 0.00, 'category' => 'Pay'],
+            ['item_id' => 13, 'item_name' => 'Partial Payment', 'price' => 0.00, 'category' => 'Pay']
         ];
 
         DB::table('items')->insert($items);

@@ -19,7 +19,7 @@ class CreateHistoryTable extends Migration
             $table->integer('d_id');
             $table->string('name', 255);
             $table->date('date');
-            $table->timestamps(); // Optional if you want 'created_at' and 'updated_at' columns
+            $table->timestamps();
         });
     }
 
