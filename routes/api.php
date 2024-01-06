@@ -11,8 +11,9 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\UthangController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TransactionController;
-
-
+use App\Http\Controllers\ResetPassController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\PasswordResetTokenController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -32,7 +33,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->get('/user-data', [UserDataController::class, 'getUserData']);
 Route::post('send-reset-email', [UserDataController::class, 'sendResetEmail']);
-Route::post('reset-password', [UserDataController::class, 'resetPassword']);
+Route::put('reset-password', [ResetPassController::class, 'resetPassword']);
+Route::post('reset-pass', [PasswordResetTokenController::class, 'store']);
+Route::post('reset-token', [PasswordResetTokenController::class, 'getPasswordResetEmail'])->name('password.reset');
 
 Route::get('/items', [ItemController::class, 'items']);
 Route::get('/sales', [SaleController::class, 'sales']);

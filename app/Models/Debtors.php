@@ -22,6 +22,10 @@ class Debtors extends Model
         'role_id'     
     ];
     // You can also add other attributes as needed
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'email', 'email');
+    }
 
     
 }

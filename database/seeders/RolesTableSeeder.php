@@ -15,6 +15,6 @@ class RolesTableSeeder extends Seeder
 
         ];
 
-        DB::table('items')->insert($items);
+        DB::table('roles')->insert($items);
     }
 }
