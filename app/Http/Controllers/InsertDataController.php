@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Debtors;
 use App\Models\User;
+use App\Models\Uthang;
 use Illuminate\Http\Request;
 
 class InsertDataController extends Controller
@@ -25,6 +26,7 @@ class InsertDataController extends Controller
                 'address' => $request->input('address'),
                 'role' => 2,
                 'created_at' => now(),
+                'data_amount' => 0.00
 
             ]);
             $user = User::create([
@@ -47,20 +49,37 @@ class InsertDataController extends Controller
         }
     }
     public function destroy($d_id)
-    {
-        try {
-            $debtor = Debtors::findOrFail($d_id);
-            $debtor->delete();
+{
+    try {
+        $debtor = Debtors::findOrFail($d_id);
 
-            // Log success
-            \Log::info("Debtor deleted successfully");
+        // Check if there are unpaid uthangs
+        if (Uthang::where('d_id', $d_id)->exists()) {
+            // Uthangs are present, return custom error message
+            return response(['message' => 'Cannot delete Debtor, Uthangs still unpaid.'], 422);
+        }
 
-            return response(['message' => 'Debtor deleted successfully'], 200);
-        } catch (\Exception $e) {
+        $debtor->delete();
+
+        // Log success
+        \Log::info("Debtor deleted successfully");
+
+        return response(['message' => 'Debtor deleted successfully'], 200);
+    } catch (\Exception $e) {
+        // Check if the exception is due to foreign key constraint violation
+        if ($e instanceof \Illuminate\Database\QueryException && $e->errorInfo[1] === 1451) {
             // Log the exception
             \Log::error($e);
 
-            return response(['message' => $e->getMessage()], 500);
+            // Return custom error message
+            return response(['message' => 'Cannot delete Debtor, Uthangs still unpaid.'], 422);
         }
+
+        // Log other exceptions
+        \Log::error($e);
+
+        return response(['message' => $e->getMessage()], 500);
     }
+}
+
 }

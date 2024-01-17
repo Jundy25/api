@@ -24,5 +24,5 @@ class Uthang extends Model
         // Add other fillable columns if needed
     ];
 
-    // Define relationships if needed
+    
 }

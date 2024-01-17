@@ -26,21 +26,27 @@ class AuthController extends Controller
 
     try {
         if (!Auth::attempt($credentials)) {
-            return response(['message' => "Account is not registered"], 401); // 401 Unauthorized
+            return response(['message' => "Account is not registered"], 401);
         }
 
         $user = $this->model->where('email', $request->email)->first();
-        $token = $user->createToken($request->email . Str::random(8))->plainTextToken;
+        $tokenName = $request->email . Str::random(8);
+
+        // Set token expiration time based on "remember me" flag
+        $tokenExpiration = $request->has('remember_me') ? now()->addWeeks(1) : null;
+
+        $token = $user->createToken($tokenName, ['role'])->plainTextToken;
+        $user->tokens()->where('name', $tokenName)->update(['expires_at' => $tokenExpiration]);
+
         $role = $user->role;
 
         return response(['token' => $token, 'role' => $role], 200);
-        $user = $request->user(); // Fetch the authenticated user
-
-
     } catch (\Exception $e) {
-        return response(['message' => $e->getMessage()], 500); // 500 Internal Server Error
+        return response(['message' => $e->getMessage()], 500);
     }
 }
+
+
 
      
 public function register(Request $request)

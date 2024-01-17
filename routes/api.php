@@ -40,8 +40,10 @@ Route::post('reset-token', [PasswordResetTokenController::class, 'getPasswordRes
 Route::get('/items', [ItemController::class, 'items']);
 Route::get('/sales', [SaleController::class, 'sales']);
 Route::get('/transactions', [TransactionController::class, 'transactions']);
+Route::get('/usertransactions/{id}', [TransactionController::class, 'getTransactionsByDebtorId']);
 
 Route::get('/debtors', [DebtorsController::class, 'debtors']);
+Route::get('/updatestatus/{id}', [DebtorsController::class, 'updateStatus']);
 Route::post('/insertdebtors', [InsertDataController::class, 'store']);
 Route::put('/updatedebtor/{id}', [DebtorsController::class, 'updateDebtor']);
 Route::delete('/deletedebtor/{id}', [InsertDataController::class, 'destroy']);

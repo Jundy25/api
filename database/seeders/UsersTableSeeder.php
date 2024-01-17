@@ -16,6 +16,7 @@ class UsersTableSeeder extends Seeder
                 'email' => 'admin@gmail.com',
                 'password' => Hash::make('admin'), // Hash the password using Bcrypt
                 'role' => 1,
+                'created_at' => now(),
             ],
         ];
 

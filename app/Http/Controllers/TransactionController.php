@@ -23,4 +23,12 @@ class TransactionController extends Controller
         return response()->json(['error' => 'Internal Server Error'], 500);
     }
 }
+
+public function getTransactionsByDebtorId($d_id)
+{
+    // Logic to fetch transactions for the specified debtor ID
+    $transactions = Transaction::where('d_id', $d_id)->get();
+
+    return response()->json($transactions);
+}
 }

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Uthang;
 use App\Models\Item;
+use App\Models\History;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -64,6 +65,7 @@ class UthangController extends Controller
     }
     
 }
+
 public function updateUthang(Request $request, $u_id)
 {
     try {
@@ -105,12 +107,24 @@ public function deleteUthang($u_id)
     {
         try {
             $uthang = Uthang::find($u_id);
-
             if (!$uthang) {
                 return response()->json(['error' => 'Uthang not found'], 404);
             }
 
+            $item = $uthang->item;
+
+            // Store the item name before deleting the uthang
+            $itemName = $item->item_name;
+
+            History::create([
+                'transaction' => "Paid utang {$itemName} x{$quantity}", 
+                'd_id' => $d_id,
+                'name' => $debtorName,
+                'date' => now()
+            ]);
+
             $uthang->delete();
+            
 
             return response()->json(['message' => 'Uthang deleted successfully'], 200);
         } catch (\Exception $e) {

@@ -26,7 +26,33 @@ class DebtorsController extends Controller
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
+    public function updateStatus(Request $request, $d_id)
+    {
+        try {
+            $debtor = Debtors::find($d_id);
     
+            if (!$debtor) {
+                return response()->json(['error' => 'Debtor not found'], 404);
+            }
+    
+            $data = $request->only(['status']);
+            
+            $debtor->update([
+                'status' => $data['status'],
+            ]);
+
+            return response()->json([
+                'message' => 'Debtor updated successfully',
+                'debtor' => $updatedDebtor,
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error($e); // Log the error
+            dd($e->getMessage());
+    
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+     
 
     public function updateDebtor(Request $request, $d_id)
     {
@@ -116,15 +142,21 @@ class DebtorsController extends Controller
             $debtor = Debtors::find($d_id);
             $debtor->data_amount = $newDataAmount;
             $debtor->save();
-
+            $debtor->update([
+                'due_date' => null,
+                'last_payment_date' => now(),
+            ]);
+ 
             return response()->json([], 204); // No content
         } catch (\Exception $e) {
             return response()->json(['message' => 'Internal Server Error'], 500);
         }
     }
 
-    public function deleteUtangs($d_id)
-    {
+    public function deleteUtangs(Request $request, $d_id)
+    {   
+        $data_amount = $request->input('data_amount');
+
         try {
             // Log before deletion
             logger('Before deletion: ' . now());
@@ -137,23 +169,43 @@ class DebtorsController extends Controller
     
             // Delete utangs associated with the debtor
             Uthang::where('d_id', $d_id)->delete();
+            $debtor = Debtors::find($d_id);
+            $debtor->update([
+                'due_date' => null,
+            ]);
     
             // Insert a message into the history table
-            History::create([
-                'transaction' => "Uthangs Fully Paid. Grand Total: ₱{$grandTotal}.00", 
-                'd_id' => $d_id,
-                'name' => $debtorName,
-                'date' => now()
-            ]);
+            if($data_amount >= $grandTotal){
+                History::create([
+                    'transaction' => "Uthangs Fully Paid. Grand Total: ₱{$data_amount}.00", 
+                    'd_id' => $d_id,
+                    'name' => $debtorName,
+                    'date' => now()
+                ]);
 
-            Sale::create([
-                'item_id' => 12,
-                'quantity_sold' => 0,
-                'price' => $grandTotal,
-                'sale_date' => now(),
-                'debtor_name' => $debtorName,
-            ]);
-    
+                Sale::create([
+                    'item_id' => 12,
+                    'quantity_sold' => 0,
+                    'price' => $data_amount,
+                    'sale_date' => now(),
+                    'debtor_name' => $debtorName,
+                ]);
+            }elseif($data_amount < $grandTotal){
+                History::create([
+                    'transaction' => "Balance Fully Paid. Total: ₱{$data_amount}.00", 
+                    'd_id' => $d_id,
+                    'name' => $debtorName,
+                    'date' => now()
+                ]);
+
+                Sale::create([
+                    'item_id' => 14,
+                    'quantity_sold' => 0,
+                    'price' => $data_amount,
+                    'sale_date' => now(),
+                    'debtor_name' => $debtorName,
+                ]);
+            }
             // Log after deletion
             logger('After deletion: ' . now());
     
@@ -163,6 +215,7 @@ class DebtorsController extends Controller
             return response()->json(['message' => 'Internal Server Error'], 500);
         }
     }
+
     public function checkBalance($d_id, Request $request){
         try {
             $newDataAmount = $request->input('newDataAmount');
