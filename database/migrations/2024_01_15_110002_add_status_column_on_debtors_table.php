@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('debtors', function (Blueprint $table) {
-            $table->date('status')->after('due_date')->nullable();
+            $table->string('status')->after('due_date')->nullable();
         });
     }
 

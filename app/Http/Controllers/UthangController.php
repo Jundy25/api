@@ -34,10 +34,11 @@ class UthangController extends Controller
     }
 
     public function addUthang(Request $request)
-{
+    {
     try {
         $data = $request->input();
-
+        
+        
         $itemPrice = Item::where('item_id', $data['item_id'])->value('price');
         $totalPrice = $itemPrice * $data['quantity'];
 
@@ -52,6 +53,8 @@ class UthangController extends Controller
         ]);
 
         $uthang->save();
+
+
 
         return response()->json(['message' => 'Uthang added successfully'], 201);
     } catch (\Exception $e) {

@@ -27,31 +27,36 @@ class DebtorsController extends Controller
         }
     }
     public function updateStatus(Request $request, $d_id)
-    {
-        try {
-            $debtor = Debtors::find($d_id);
-    
-            if (!$debtor) {
-                return response()->json(['error' => 'Debtor not found'], 404);
-            }
-    
-            $data = $request->only(['status']);
-            
+{
+    try {
+        $debtor = Debtors::find($d_id);
+
+        if (!$debtor) {
+            return response()->json(['error' => 'Debtor not found'], 404);
+        }
+
+        $data = $request->only(['status']);
+
+        // Check if the 'status' key exists in the $data array
+        if (array_key_exists('status', $data)) {
             $debtor->update([
                 'status' => $data['status'],
             ]);
 
             return response()->json([
-                'message' => 'Debtor updated successfully',
-                'debtor' => $updatedDebtor,
+                'message' => 'Status updated successfully',
             ], 200);
-        } catch (\Exception $e) {
-            \Log::error($e); // Log the error
-            dd($e->getMessage());
-    
-            return response()->json(['error' => $e->getMessage()], 500);
+        } else {
+            return response()->json(['error' => 'Status key not found in the request data'], 400);
         }
+    } catch (\Exception $e) {
+        \Log::error($e); // Log the error
+        dd($e->getMessage());
+
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
      
 
     public function updateDebtor(Request $request, $d_id)
