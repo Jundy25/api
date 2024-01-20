@@ -11,14 +11,68 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class DebtorsController extends Controller
 {
     public function debtors()
+{
+    try {
+        $debtors = Debtors::all();
+
+        foreach ($debtors as $debtor) {
+            $calculatedStatus = $this->calculateStatus($debtor->due_date, $debtor->d_id);
+            $debtor->update([
+                'status' => $calculatedStatus['status'],
+            ]);
+        }
+        return response()->json($debtors);
+    } catch (\Exception $e) {
+        // Log the error
+        \Log::error($e);
+        // Return a meaningful error response
+        return response()->json(['error' => 'Internal Server Error'], 500);
+    }
+}
+
+function calculateStatus($due_date, $d_id) {
+    $currentDate = Carbon::now();
+    
+    if (!$due_date) {
+        return ['status' => 'Not Due'];
+    }
+    
+    $dueDate = Carbon::parse($due_date);
+    
+    if ($dueDate->toDateString() === $currentDate->toDateString()) {
+        return ['status' => 'Due Today'];
+    } elseif ($dueDate->lt($currentDate)) {
+        return ['status' => 'Overdue'];
+    } elseif ($dueDate->gt($currentDate)) {
+        return ['status' => 'Due'];
+    }
+}
+
+
+    public function calculateTotalForDebtor(Request $request, $d_id)
     {
         try {
-            $debtors = Debtors::all();
-            return response()->json($debtors);
+            $debtor = Debtors::find($d_id);
+            if (!$debtor) {
+                return response()->json(['error' => 'Debtor not found'], 404);
+            }
+            $totalAmount = Uthang::where('d_id', $d_id)->sum('total');
+
+            $balance = $totalAmount - $debtor->data_amount;
+            $interest = $totalAmount * 0.01;
+            $grandTotal = $balance + $interest;
+            // Logic to calculate the total of the 'total' column for a certain debtor
+            
+            if ($debtor->status === "Overdue") {
+                return response()->json(['totalAmount' => $grandTotal]);
+            } else {
+                return response()->json(['totalAmount' => $balance]);
+            }
         } catch (\Exception $e) {
             // Log the error
             \Log::error($e);
@@ -26,36 +80,6 @@ class DebtorsController extends Controller
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
-    public function updateStatus(Request $request, $d_id)
-{
-    try {
-        $debtor = Debtors::find($d_id);
-
-        if (!$debtor) {
-            return response()->json(['error' => 'Debtor not found'], 404);
-        }
-
-        $data = $request->only(['status']);
-
-        // Check if the 'status' key exists in the $data array
-        if (array_key_exists('status', $data)) {
-            $debtor->update([
-                'status' => $data['status'],
-            ]);
-
-            return response()->json([
-                'message' => 'Status updated successfully',
-            ], 200);
-        } else {
-            return response()->json(['error' => 'Status key not found in the request data'], 400);
-        }
-    } catch (\Exception $e) {
-        \Log::error($e); // Log the error
-        dd($e->getMessage());
-
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
 
      
 
@@ -235,8 +259,6 @@ class DebtorsController extends Controller
             return response()->json(['error' => 'An error occurred'], 500);
         }
     }
-    
-
 
 
 }

@@ -36,19 +36,7 @@ class Debtors extends Model
         return $this->belongsTo(User::class, 'email', 'email');
     }
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        // Listen for the creating event and set the due_date attribute
-        static::creating(function ($debtor) {
-            // Use Carbon to add 15 days to the created_at date
-            $dueDate = Carbon::parse($debtor->created_at)->addDays(15);
-
-            // Assign the calculated due date to the due_date attribute
-            $debtor->due_date = $dueDate;
-        });
-    }
 
     
 }

@@ -24,5 +24,10 @@ class Uthang extends Model
         // Add other fillable columns if needed
     ];
 
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
     
 }

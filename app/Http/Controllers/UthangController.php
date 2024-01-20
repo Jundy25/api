@@ -5,6 +5,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Uthang;
+use App\Models\Debtors;
 use App\Models\Item;
 use App\Models\History;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class UthangController extends Controller
 {
@@ -36,7 +38,30 @@ class UthangController extends Controller
     public function addUthang(Request $request)
     {
     try {
+        
         $data = $request->input();
+        $debtor = Debtors::find($data['d_id']);
+        $uthangsCount = Uthang::where('d_id', $data['d_id'])->count();
+        $lastpay = $debtor->last_payment_date;
+
+
+        if ($uthangsCount > 0) {
+
+        } else {
+            if(!$lastpay){
+                $dueDate = Carbon::parse($debtor->created_at)->addDays(15);
+                $debtor->update([
+                    'due_date' => $dueDate,
+                ]);
+
+            } else {
+                $dueDate = Carbon::parse($debtor->last_payment_date)->addDays(15);
+                $debtor->update([
+                    'due_date' => $dueDate,
+                ]);
+            }
+            
+        }
         
         
         $itemPrice = Item::where('item_id', $data['item_id'])->value('price');
@@ -109,20 +134,17 @@ public function updateUthang(Request $request, $u_id)
 public function deleteUthang($u_id)
     {
         try {
-            $uthang = Uthang::find($u_id);
+            $uthang = Uthang::with('item')->find($u_id);
+
             if (!$uthang) {
                 return response()->json(['error' => 'Uthang not found'], 404);
             }
-
-            $item = $uthang->item;
-
-            // Store the item name before deleting the uthang
-            $itemName = $item->item_name;
-
+            $itemName = $uthang->item->item_name;
+            $debtor = Debtors::find($uthang->d_id);
             History::create([
-                'transaction' => "Paid utang {$itemName} x{$quantity}", 
-                'd_id' => $d_id,
-                'name' => $debtorName,
+                'transaction' => "Paid utang {$itemName} x{$uthang->quantity}", 
+                'd_id' => $uthang->d_id,
+                'name' => $debtor->d_name,
                 'date' => now()
             ]);
 
