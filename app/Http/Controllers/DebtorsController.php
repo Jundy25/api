@@ -34,6 +34,30 @@ class DebtorsController extends Controller
         return response()->json(['error' => 'Internal Server Error'], 500);
     }
 }
+public function debtor(Request $request, $d_id)
+{
+    try {
+        $debtor = Debtors::find($d_id);
+
+        if (!$debtor) {
+            return response()->json(['error' => 'Debtor not found'], 404);
+        }
+
+        $calculatedStatus = $this->calculateStatus($debtor->due_date, $debtor->d_id);
+        
+        $debtor->update([
+            'status' => $calculatedStatus['status'],
+        ]);
+
+        return response()->json($debtor);
+    } catch (\Exception $e) {
+        // Log the error
+        \Log::error($e);
+        // Return a meaningful error response
+        return response()->json(['error' => 'Internal Server Error'], 500);
+    }
+}
+
 
 function calculateStatus($due_date, $d_id) {
     $currentDate = Carbon::now();
@@ -45,7 +69,7 @@ function calculateStatus($due_date, $d_id) {
     $dueDate = Carbon::parse($due_date);
     
     if ($dueDate->toDateString() === $currentDate->toDateString()) {
-        return ['status' => 'Due Today'];
+        return ['status' => 'Due Today', 'color' => 'orange'];
     } elseif ($dueDate->lt($currentDate)) {
         return ['status' => 'Overdue'];
     } elseif ($dueDate->gt($currentDate)) {

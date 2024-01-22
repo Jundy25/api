@@ -48,18 +48,11 @@ class UthangController extends Controller
         if ($uthangsCount > 0) {
 
         } else {
-            if(!$lastpay){
-                $dueDate = Carbon::parse($debtor->created_at)->addDays(15);
-                $debtor->update([
-                    'due_date' => $dueDate,
-                ]);
+            $dueDate = (!$lastpay) ? Carbon::now()->addDays(15) : Carbon::parse($debtor->last_payment_date)->addDays(15);
 
-            } else {
-                $dueDate = Carbon::parse($debtor->last_payment_date)->addDays(15);
-                $debtor->update([
-                    'due_date' => $dueDate,
-                ]);
-            }
+            $debtor->update([
+                'due_date' => $dueDate,
+]);
             
         }
         
