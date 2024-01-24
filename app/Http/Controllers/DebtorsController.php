@@ -16,93 +16,85 @@ use Carbon\Carbon;
 class DebtorsController extends Controller
 {
     public function debtors()
-{
-    try {
-        $debtors = Debtors::all();
-
-        foreach ($debtors as $debtor) {
-            $calculatedStatus = $this->calculateStatus($debtor->due_date, $debtor->d_id);
-            $debtor->update([
-                'status' => $calculatedStatus['status'],
-            ]);
-        }
-        return response()->json($debtors);
-    } catch (\Exception $e) {
-        // Log the error
-        \Log::error($e);
-        // Return a meaningful error response
-        return response()->json(['error' => 'Internal Server Error'], 500);
-    }
-}
-public function debtor(Request $request, $d_id)
-{
-    try {
-        $debtor = Debtors::find($d_id);
-
-        if (!$debtor) {
-            return response()->json(['error' => 'Debtor not found'], 404);
-        }
-
-        $calculatedStatus = $this->calculateStatus($debtor->due_date, $debtor->d_id);
-        
-        $debtor->update([
-            'status' => $calculatedStatus['status'],
-        ]);
-
-        return response()->json($debtor);
-    } catch (\Exception $e) {
-        // Log the error
-        \Log::error($e);
-        // Return a meaningful error response
-        return response()->json(['error' => 'Internal Server Error'], 500);
-    }
-}
-
-
-function calculateStatus($due_date, $d_id) {
-    $currentDate = Carbon::now();
-    
-    if (!$due_date) {
-        return ['status' => 'Not Due'];
-    }
-    
-    $dueDate = Carbon::parse($due_date);
-    
-    if ($dueDate->toDateString() === $currentDate->toDateString()) {
-        return ['status' => 'Due Today', 'color' => 'orange'];
-    } elseif ($dueDate->lt($currentDate)) {
-        return ['status' => 'Overdue'];
-    } elseif ($dueDate->gt($currentDate)) {
-        return ['status' => 'Due'];
-    }
-}
-
-
-    public function calculateTotalForDebtor(Request $request, $d_id)
     {
         try {
-            $debtor = Debtors::find($d_id);
-            if (!$debtor) {
-                return response()->json(['error' => 'Debtor not found'], 404);
-            }
-            $totalAmount = Uthang::where('d_id', $d_id)->sum('total');
+            $debtors = Debtors::all();
 
-            $balance = $totalAmount - $debtor->data_amount;
-            $interest = $totalAmount * 0.01;
-            $grandTotal = $balance + $interest;
-            // Logic to calculate the total of the 'total' column for a certain debtor
-            
-            if ($debtor->status === "Overdue") {
-                return response()->json(['totalAmount' => $grandTotal]);
-            } else {
-                return response()->json(['totalAmount' => $balance]);
+            foreach ($debtors as $debtor) {
+                $calculatedValues = $this->calculateValues($debtor->due_date, $debtor->d_id);
+
+                $debtor->update([
+                    'status' => $calculatedValues['status'],
+                ]);
+
+                $debtor->totalAmount = $calculatedValues['totalAmount'];
             }
+
+            return response()->json($debtors);
         } catch (\Exception $e) {
             // Log the error
             \Log::error($e);
             // Return a meaningful error response
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
+    }
+
+    public function debtor(Request $request, $d_id)
+    {
+        try {
+            $debtor = Debtors::find($d_id);
+
+            if (!$debtor) {
+                return response()->json(['error' => 'Debtor not found'], 404);
+            }
+
+            $calculatedValues = $this->calculateValues($debtor->due_date, $debtor->d_id);
+
+            $debtor->update([
+                'status' => $calculatedValues['status'],
+            ]);
+
+            return response()->json($debtor);
+        } catch (\Exception $e) {
+            // Log the error
+            \Log::error($e);
+            // Return a meaningful error response
+            return response()->json(['error' => 'Internal Server Error'], 500);
+        }
+    }
+
+
+
+private function calculateValues($due_date, $d_id)
+    {
+        $currentDate = Carbon::now();
+        $calculatedValues = ['status' => 'Not Due', 'totalAmount' => 0];
+
+        if ($due_date) {
+            $dueDate = Carbon::parse($due_date);
+
+            if ($dueDate->toDateString() === $currentDate->toDateString()) {
+                $calculatedValues['status'] = 'Due Today';
+            } elseif ($dueDate->lt($currentDate)) {
+                $calculatedValues['status'] = 'Overdue';
+            } elseif ($dueDate->gt($currentDate)) {
+                $calculatedValues['status'] = 'Due';
+            }
+        }
+
+        $totalAmount = Uthang::where('d_id', $d_id)->sum('total');
+        $debtor = Debtors::find($d_id);
+        $balance = $totalAmount - $debtor->data_amount;
+        $interest = $totalAmount * 0.01;
+        $grandTotal = $balance + $interest;
+
+        if ($calculatedValues['status'] === 'Overdue') {
+            $calculatedValues['totalAmount'] = $grandTotal;
+        } else {
+            $calculatedValues['totalAmount'] = $balance;
+        }
+
+        return $calculatedValues;
     }
 
      
@@ -167,6 +159,7 @@ function calculateStatus($due_date, $d_id) {
             History::create([
                 'transaction' => "Partially Paid: ₱{$partial}.00",
                 'd_id' => $d_id,
+                'payment' => $partial,
                 'name' => $debtorName,
                 'date' => now()
             ]);
@@ -232,6 +225,7 @@ function calculateStatus($due_date, $d_id) {
                 History::create([
                     'transaction' => "Uthangs Fully Paid. Grand Total: ₱{$data_amount}.00", 
                     'd_id' => $d_id,
+                    'payment' => $data_amount,
                     'name' => $debtorName,
                     'date' => now()
                 ]);
@@ -247,6 +241,7 @@ function calculateStatus($due_date, $d_id) {
                 History::create([
                     'transaction' => "Balance Fully Paid. Total: ₱{$data_amount}.00", 
                     'd_id' => $d_id,
+                    'payment' => $data_amount,
                     'name' => $debtorName,
                     'date' => now()
                 ]);

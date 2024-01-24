@@ -44,7 +44,7 @@ Route::get('/usertransactions/{id}', [TransactionController::class, 'getTransact
 
 Route::get('/debtors', [DebtorsController::class, 'debtors']);
 Route::get('/debtor/{id}', [DebtorsController::class, 'debtor']);
-Route::get('/balance/{id}', [DebtorsController::class, 'calculateTotalForDebtor']);
+Route::get('/balance/{id}', [DebtorsController::class, 'calculateValues']);
 Route::post('/insertdebtors', [InsertDataController::class, 'store']);
 Route::put('/updatedebtor/{id}', [DebtorsController::class, 'updateDebtor']);
 Route::delete('/deletedebtor/{id}', [InsertDataController::class, 'destroy']);

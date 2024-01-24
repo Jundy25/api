@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Debtors;
 use App\Models\User;
 use App\Models\Uthang;
+use App\Models\History;
 use Illuminate\Http\Request;
 
 class InsertDataController extends Controller
@@ -52,6 +53,8 @@ class InsertDataController extends Controller
 {
     try {
         $debtor = Debtors::findOrFail($d_id);
+        $user = User::findOrFail($d_id);
+        $history = History::findOrFail($d_id);
 
         // Check if there are unpaid uthangs
         if (Uthang::where('d_id', $d_id)->exists()) {
@@ -60,6 +63,8 @@ class InsertDataController extends Controller
         }
 
         $debtor->delete();
+        $user->delete();
+        $history->delete();
 
         // Log success
         \Log::info("Debtor deleted successfully");

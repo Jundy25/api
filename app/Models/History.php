@@ -13,6 +13,8 @@ class History extends Model
         'd_id',
         'name',
         'date',
+        'price',
+        'payment'
     ];
 
     // You can define additional properties or methods here

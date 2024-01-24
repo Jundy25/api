@@ -128,17 +128,25 @@ public function deleteUthang($u_id)
     {
         try {
             $uthang = Uthang::with('item')->find($u_id);
+            $debtor = Debtors::find($uthang->d_id);
 
             if (!$uthang) {
                 return response()->json(['error' => 'Uthang not found'], 404);
             }
+            $qty = $uthang->quantity;
             $itemName = $uthang->item->item_name;
+            $itemPrice = $uthang->item->price;
             $debtor = Debtors::find($uthang->d_id);
+            $totalPrice = $qty * $itemPrice;
             History::create([
                 'transaction' => "Paid utang {$itemName} x{$uthang->quantity}", 
                 'd_id' => $uthang->d_id,
+                'payment' => $totalPrice,
                 'name' => $debtor->d_name,
                 'date' => now()
+            ]);
+            $debtor->update([
+                'due_date' => null,
             ]);
 
             $uthang->delete();
