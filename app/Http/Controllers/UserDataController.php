@@ -45,6 +45,30 @@ class UserDataController extends Controller
     }
 }
 
+public function UserData()
+    {
+        try {
+            // Get the authenticated user
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['error' => 'User not authenticated'], 401);
+            }
+
+            // You can customize the data you want to return
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ];
+
+            return response()->json($userData, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
 
 
     
@@ -75,37 +99,23 @@ class UserDataController extends Controller
     }
 
     public function resetPassword(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'token' => 'required',
-            'password' => 'required|min:8',
-        ]);
+{
+    $request->validate([
+        'old_password' => 'required',
+        'new_password' => 'required|',
+    ]);
 
-        $email = $request->input('email');
-        $token = $request->input('token');
-        $password = $request->input('password');
+    $user = Auth::user();
 
-        // Retrieve the token from the password_resets table
-        $reset = DB::table('password_resets')->where('email', $email)->first();
-
-        if (!$reset) {
-            return response()->json(['error' => 'Invalid reset token'], 400);
-        }
-
-        // Verify the token
-        if (!Hash::check($token, $reset->token)) {
-            return response()->json(['error' => 'Invalid reset token'], 400);
-        }
-
-        // Update the user's password
-        $user = User::where('email', $email)->first();
-        $user->update(['password' => Hash::make($password)]);
-
-        // Delete the used reset token
-        DB::table('password_resets')->where('email', $email)->delete();
-
-        return response()->json(['message' => 'Password reset successfully'], 200);
+    if (!Hash::check($request->old_password, $user->password)) {
+        return response()->json(['error' => 'Incorrect old password'], 401);
     }
+
+    $user->password = bcrypt($request->new_password);
+    $user->save();
+
+    return response()->json(['message' => 'Password reset successfully']);
+}
+
 
 }

@@ -17,7 +17,7 @@ class SaleController extends Controller
         // Fetch sales data with the required fields
         $sales = Sale::select('sales.sale_id', 'items.item_name', 'sales.quantity_sold', 'sales.price', 'sales.debtor_name', 'sales.sale_date')
         ->join('items', 'sales.item_id', '=', 'items.item_id')
-        ->orderBy('sale_date', 'desc')
+        ->orderBy('sale_id', 'desc')
         ->get();
 
         return response()->json($sales);

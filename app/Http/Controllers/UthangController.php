@@ -8,6 +8,7 @@ use App\Models\Uthang;
 use App\Models\Debtors;
 use App\Models\Item;
 use App\Models\History;
+use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -45,14 +46,16 @@ class UthangController extends Controller
         $lastpay = $debtor->last_payment_date;
 
 
-        if ($uthangsCount > 0) {
-
-        } else {
+        if ($uthangsCount > 0 && $debtor->due_date === null) {
             $dueDate = (!$lastpay) ? Carbon::now()->addDays(15) : Carbon::parse($debtor->last_payment_date)->addDays(15);
 
             $debtor->update([
-                'due_date' => $dueDate,
-]);
+                'due_date' => $dueDate,]);
+        } else if ($uthangsCount < 0){
+            $dueDate = (!$lastpay) ? Carbon::now()->addDays(15) : Carbon::parse($debtor->last_payment_date)->addDays(15);
+
+            $debtor->update([
+                'due_date' => $dueDate,]);
             
         }
         
@@ -127,13 +130,24 @@ public function updateUthang(Request $request, $u_id)
 public function deleteUthang($u_id)
     {
         try {
+            
             $uthang = Uthang::with('item')->find($u_id);
-            $debtor = Debtors::find($uthang->d_id);
+
+                if (!$uthang) {
+                    return response()->json(['error' => 'Uthang not found'], 404);
+                }
+
+                $debtor = Debtors::find($uthang->d_id);
+
+                if (!$debtor) {
+                    return response()->json(['error' => 'Debtor not found for Uthang'], 404);
+                }
 
             if (!$uthang) {
                 return response()->json(['error' => 'Uthang not found'], 404);
             }
             $qty = $uthang->quantity;
+            $itemId= $uthang->item->item_id;
             $itemName = $uthang->item->item_name;
             $itemPrice = $uthang->item->price;
             $debtor = Debtors::find($uthang->d_id);
@@ -145,12 +159,23 @@ public function deleteUthang($u_id)
                 'name' => $debtor->d_name,
                 'date' => now()
             ]);
-            $debtor->update([
-                'due_date' => null,
+            Sale::create([
+                'item_id' => $itemId,
+                'quantity_sold' => $qty,
+                'price' => $totalPrice,
+                'sale_date' => now(),
+                'debtor_name' => $debtor->d_name,
             ]);
-
+            
             $uthang->delete();
             
+            $uthangsCount = Uthang::where('d_id', $debtor->d_id)->count();
+            
+            if ($uthangsCount <= 0){
+                $debtor->update([
+                    'due_date' => null,
+                ]);
+            }
 
             return response()->json(['message' => 'Uthang deleted successfully'], 200);
         } catch (\Exception $e) {
