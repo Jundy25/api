@@ -14,6 +14,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ResetPassController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\PasswordResetTokenController;
+use App\Http\Controllers\ForgotPasswordController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -32,6 +33,7 @@ Route::prefix('/v1')->group(function(){
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->post('/reset-password', [UserDataController::class, 'resetPassword']);
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::middleware('auth:sanctum')->get('/user-data', [UserDataController::class, 'getUserData']);
 Route::middleware('auth:sanctum')->get('/userdata', [UserDataController::class, 'UserData']);
 Route::post('send-reset-email', [UserDataController::class, 'sendResetEmail']);

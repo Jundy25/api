@@ -30,6 +30,7 @@ class DebtorsController extends Controller
                 $debtor->totalAmount = $calculatedValues['totalAmount'];
             }
 
+
             return response()->json($debtors);
         } catch (\Exception $e) {
             // Log the error
