@@ -12,9 +12,7 @@ use App\Http\Controllers\UthangController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ResetPassController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\PasswordResetTokenController;
-use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ImageController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -33,19 +31,17 @@ Route::prefix('/v1')->group(function(){
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->post('/reset-password', [UserDataController::class, 'resetPassword']);
-Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::middleware('auth:sanctum')->get('/user-data', [UserDataController::class, 'getUserData']);
 Route::middleware('auth:sanctum')->get('/userdata', [UserDataController::class, 'UserData']);
-Route::post('send-reset-email', [UserDataController::class, 'sendResetEmail']);
-Route::put('reset-password', [ResetPassController::class, 'resetPassword']);
-Route::post('reset-pass', [PasswordResetTokenController::class, 'store']);
-Route::post('reset-token', [PasswordResetTokenController::class, 'getPasswordResetEmail'])->name('password.reset');
 
 Route::get('/items', [ItemController::class, 'items']);
 Route::get('/sales', [SaleController::class, 'sales']);
 Route::get('/transactions', [TransactionController::class, 'transactions']);
 Route::get('/viewtransactions/{id}', [TransactionController::class, 'getTransactionsByDebtorId']);
 Route::get('/usertransactions/{id}', [TransactionController::class, 'getUserTransactions']);
+Route::post('/uploadImage', [ImageController::class, 'uploadImage']);
+Route::get('/getImage/{d_id}', [ImageController::class, 'getImage']);
+
 
 Route::get('/debtors', [DebtorsController::class, 'debtors']);
 Route::get('/debtor/{id}', [DebtorsController::class, 'debtor']);

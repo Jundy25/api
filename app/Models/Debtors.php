@@ -24,7 +24,8 @@ class Debtors extends Model
         'last_payment_date',
         'role_id',
         'due_date',
-        'status'     
+        'status',
+        'img_path'    
     ];
     // You can also add other attributes as needed
     public function uthangs()
