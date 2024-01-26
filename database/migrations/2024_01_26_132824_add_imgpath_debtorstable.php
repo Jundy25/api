@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('debtors', function (Blueprint $table) {
-            $table->string('img_path')->after('last_payment_date')->nullable();
+        Schema::table('users', function (Blueprint $table) {
+            $table->unsignedBigInteger('d_id')->after('email')->nullable();
         });
     }
 

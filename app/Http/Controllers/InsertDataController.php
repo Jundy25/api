@@ -6,6 +6,7 @@ use App\Models\Debtors;
 use App\Models\User;
 use App\Models\Uthang;
 use App\Models\History;
+use App\Models\Image;
 use Illuminate\Http\Request;
 
 class InsertDataController extends Controller
@@ -30,9 +31,12 @@ class InsertDataController extends Controller
                 'data_amount' => 0.00
 
             ]);
+
+            $d_id = $debtor->id;
             $user = User::create([
                 'name' => $request->input('d_name'),
                 'email' => $request->input('email'),
+                'd_id' => $d_id,
                 'password' => $request->input('d_name'),
                 'role' => 2,
                 'created_at' => now(),
@@ -49,40 +53,64 @@ class InsertDataController extends Controller
             return response(['message' => $e->getMessage()], 500);
         }
     }
+
+
+
     public function destroy($d_id)
-{
-    try {
-        $debtor = Debtors::findOrFail($d_id);
-        $user = User::findOrFail($d_id);
+    {
+        try {
+            $debtor = Debtors::findOrFail($d_id);
+            $id = $d_id + 1;
 
-        // Check if there are unpaid uthangs
-        if (Uthang::where('d_id', $d_id)->exists()) {
-            // Uthangs are present, return custom error message
-            return response(['message' => 'Cannot delete Debtor, Uthangs still unpaid.'], 422);
-        }
+            $user = User::findOrFail($id);
 
-        $debtor->delete();
-        $user->delete();
+            $image = Image::where('d_id', $d_id)->first(); // Assuming you want to retrieve the first image
 
-        // Log success
-        \Log::info("Debtor deleted successfully");
+            // Check if there are unpaid uthangs
+            if (Uthang::where('d_id', $d_id)->exists()) {
+                // Uthangs are present, return custom error message
+                return response(['message' => 'Cannot delete Debtor, Uthangs still unpaid.'], 422);
+            }
 
-        return response(['message' => 'Debtor deleted successfully'], 200);
-    } catch (\Exception $e) {
-        // Check if the exception is due to foreign key constraint violation
-        if ($e instanceof \Illuminate\Database\QueryException && $e->errorInfo[1] === 1451) {
+            // Use transactions to ensure atomicity
+            \DB::beginTransaction();
+
+            try {
+                $debtor->delete();
+                $user->delete();
+                if ($image) {
+                    $image->delete();
+                }
+
+                \DB::commit(); // Commit the transaction if everything is successful
+
+                // Log success outside of the try-catch block
+                \Log::info("Debtor deleted successfully");
+
+                return response(['message' => 'Debtor deleted successfully'], 200);
+            } catch (\Exception $e) {
+                \DB::rollBack(); // Roll back the transaction in case of any exception
+
+                // Log the exception
+                \Log::error('Debtor deletion failed: ' . $e->getMessage());
+
+                // Re-throw the exception after logging
+                throw $e;
+            }
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             // Log the exception
             \Log::error($e);
 
-            // Return custom error message
-            return response(['message' => 'Cannot delete Debtor, Uthangs still unpaid.'], 422);
+            // Return custom error message for 404 error
+            return response(['message' => 'Debtor not found'], 404);
+        } catch (\Exception $e) {
+            // Log other exceptions
+            \Log::error('Debtor deletion failed: ' . $e->getMessage());
+
+            return response(['message' => 'Debtor deletion failed: ' . $e->getMessage()], 500);
         }
-
-        // Log other exceptions
-        \Log::error($e);
-
-        return response(['message' => $e->getMessage()], 500);
     }
-}
+
+
 
 }
