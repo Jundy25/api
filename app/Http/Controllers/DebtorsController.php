@@ -83,10 +83,13 @@ private function calculateValues($due_date, $d_id)
             }
         }
 
+        $dueDate = Carbon::parse($due_date);
+        $due = $currentDate->diffInDays($dueDate->toDateString());
         $totalAmount = Uthang::where('d_id', $d_id)->sum('total');
         $debtor = Debtors::find($d_id);
         $balance = $totalAmount - $debtor->data_amount;
-        $interest = $totalAmount * 0.01;
+        $fee = 0.01 * $due;
+        $interest = $totalAmount * $fee;
         $grandTotal = $balance + $interest;
 
         if ($calculatedValues['status'] === 'Overdue') {
