@@ -35,6 +35,9 @@ Route::middleware('auth:sanctum')->get('/user-data', [UserDataController::class,
 Route::middleware('auth:sanctum')->get('/userdata', [UserDataController::class, 'UserData']);
 
 Route::get('/items', [ItemController::class, 'items']);
+Route::post('/insert_items', [ItemController::class, 'addItem']);
+Route::put('/edit_item/{item_id}', [ItemController::class, 'editItem']);
+Route::delete('/delete_item/{item_id}', [ItemController::class, 'deleteItem']);
 Route::get('/sales', [SaleController::class, 'sales']);
 Route::get('/transactions', [TransactionController::class, 'transactions']);
 Route::get('/viewtransactions/{id}', [TransactionController::class, 'getTransactionsByDebtorId']);

@@ -26,7 +26,7 @@ class AuthController extends Controller
 
     try {
         if (!Auth::attempt($credentials)) {
-            return response(['message' => "Account is not registered"], 401);
+            return response(['message' => "Invalid Email or Password"], 401);
         }
 
         $user = $this->model->where('email', $request->email)->first();
