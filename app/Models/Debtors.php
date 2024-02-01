@@ -36,6 +36,11 @@ class Debtors extends Model
     {
         return $this->belongsTo(User::class, 'email', 'email');
     }
+    public function history()
+{
+    return $this->hasMany(History::class, 'd_id', 'd_id');
+}
+
 
 
 

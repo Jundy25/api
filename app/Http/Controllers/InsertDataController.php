@@ -31,8 +31,7 @@ class InsertDataController extends Controller
                 'data_amount' => 0.00
 
             ]);
-
-            $d_id = $debtor->id;
+            $d_id = Debtors::where('d_name', $request->input('d_name'))->value('d_id');
             $user = User::create([
                 'name' => $request->input('d_name'),
                 'email' => $request->input('email'),
@@ -40,6 +39,13 @@ class InsertDataController extends Controller
                 'password' => $request->input('d_name'),
                 'role' => 2,
                 'created_at' => now(),
+            ]);
+
+            History::create([
+                'transaction' => "Added New Debtor {$request->input('d_name')}", 
+                'd_id' => $d_id,
+                'name' => $request->input('d_name'),
+                'date' => now()
             ]);
 
             // Log success
@@ -60,9 +66,8 @@ class InsertDataController extends Controller
     {
         try {
             $debtor = Debtors::findOrFail($d_id);
-            $id = $d_id + 1;
 
-            $user = User::findOrFail($id);
+            $user = User::where('d_id', $d_id);
 
             $image = Image::where('d_id', $d_id)->first(); // Assuming you want to retrieve the first image
 
@@ -72,6 +77,12 @@ class InsertDataController extends Controller
                 return response(['message' => 'Cannot delete Debtor, Uthangs still unpaid.'], 422);
             }
 
+            History::create([
+                'transaction' => "Deleted {$debtor->d_name}", 
+                'd_id' => $debtor->d_id,
+                'name' => $debtor->d_name,
+                'date' => now()
+            ]);
             // Use transactions to ensure atomicity
             \DB::beginTransaction();
 
@@ -84,6 +95,7 @@ class InsertDataController extends Controller
 
                 \DB::commit(); // Commit the transaction if everything is successful
 
+                
                 // Log success outside of the try-catch block
                 \Log::info("Debtor deleted successfully");
 

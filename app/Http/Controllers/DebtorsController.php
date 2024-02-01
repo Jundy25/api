@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Debtors;
 use App\Models\Uthang;
 use App\Models\Sale;
+use App\Models\Limit;
 use App\Models\History;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,6 @@ class DebtorsController extends Controller
 
                 $debtor->totalAmount = $calculatedValues['totalAmount'];
             }
-
 
             return response()->json($debtors);
         } catch (\Exception $e) {
@@ -55,7 +55,14 @@ class DebtorsController extends Controller
                 'status' => $calculatedValues['status'],
             ]);
 
-            return response()->json($debtor);
+            logger('Before deletion: ' . now());
+            
+
+            return response()->json([
+                'debtor' => $debtor,
+                'totalAmount' => $calculatedValues['totalAmount'],
+                'interest' => $calculatedValues['interest'],
+            ]);
         } catch (\Exception $e) {
             // Log the error
             \Log::error($e);
@@ -69,7 +76,11 @@ class DebtorsController extends Controller
 private function calculateValues($due_date, $d_id)
     {
         $currentDate = Carbon::now();
-        $calculatedValues = ['status' => 'Not Due', 'totalAmount' => 0];
+        $calculatedValues = [
+            'status' => 'Not Due', 
+            'totalAmount' => 0,
+            'interest' => 0
+        ];
 
         if ($due_date) {
             $dueDate = Carbon::parse($due_date);
@@ -88,12 +99,14 @@ private function calculateValues($due_date, $d_id)
         $totalAmount = Uthang::where('d_id', $d_id)->sum('total');
         $debtor = Debtors::find($d_id);
         $balance = $totalAmount - $debtor->data_amount;
-        $fee = 0.01 * $due;
+        $mutiplier = Limit::find(3);
+        $fee = $mutiplier->amount * $due;
         $interest = $totalAmount * $fee;
         $grandTotal = $balance + $interest;
 
         if ($calculatedValues['status'] === 'Overdue') {
             $calculatedValues['totalAmount'] = $grandTotal;
+            $calculatedValues['interest'] = $interest;
         } else {
             $calculatedValues['totalAmount'] = $balance;
         }
@@ -104,45 +117,43 @@ private function calculateValues($due_date, $d_id)
      
 
     public function updateDebtor(Request $request, $d_id)
-    {
-        try {
-            $debtor = Debtors::find($d_id);
-    
-            if (!$debtor) {
-                return response()->json(['error' => 'Debtor not found'], 404);
-            }
-    
-            $data = $request->only(['d_name', 'phone', 'address']);
-            
-            $debtor->update([
-                'd_name' => $data['d_name'],
-                'phone' => $data['phone'],
-                'address' => $data['address'],
+{
+    try {
+        $debtor = Debtors::find($d_id);
+
+        if (!$debtor) {
+            return response()->json(['error' => 'Debtor not found'], 404);
+        }
+
+        $data = $request->only(['d_name', 'phone', 'address']);
+
+        $debtor->update([
+            'd_name' => $data['d_name'],
+            'phone' => $data['phone'],
+            'address' => $data['address'],
+            'updated_at' => now(),
+        ]);
+
+        // Update the associated user record if it exists
+        if ($debtor->user) {
+            $debtor->user->update([
+                'name' => $data['d_name'],
                 'updated_at' => now(),
             ]);
-    
-            // Update the associated user record if it exists
-            if ($debtor->user) {
-                $debtor->user->update([
-                    'name' => $data['d_name'],
-                    'updated_at' => now(),
-                ]);
-            }
-    
-            // Fetch the updated debtor to include it in the response
-            $updatedDebtor = Debtors::with('user')->find($d_id);
-    
-            return response()->json([
-                'message' => 'Debtor updated successfully',
-                'debtor' => $updatedDebtor,
-            ], 200);
-        } catch (\Exception $e) {
-            \Log::error($e); // Log the error
-            dd($e->getMessage());
-    
-            return response()->json(['error' => $e->getMessage()], 500);
         }
+
+        // Fetch the updated debtor to include it in the response
+        $updatedDebtor = Debtors::with('user')->find($d_id);
+
+        return response()->json([
+            'message' => 'Debtor updated successfully',
+            'debtor' => $updatedDebtor,
+        ], 200);
+    } catch (\Exception $e) {
+        \Log::error($e); // Log the error
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     public function dataPayment(Request $request, $d_id)
     {

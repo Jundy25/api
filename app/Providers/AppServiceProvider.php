@@ -3,22 +3,21 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Debtors;
+use App\Observers\DebtorObserver;
+use App\Models\Uthang;
+use App\Observers\UthangsObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+    public function boot()
+{
+    Debtors::observe(DebtorObserver::class);
+    Uthang::observe(UthangsObserver::class);
+}
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        //
-    }
+
+    
+
+
 }

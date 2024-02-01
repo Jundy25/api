@@ -38,12 +38,22 @@ class UthangController extends Controller
 
     public function addUthang(Request $request)
     {
+    \DB::beginTransaction();
     try {
         
         $data = $request->input();
         $debtor = Debtors::find($data['d_id']);
         $uthangsCount = Uthang::where('d_id', $data['d_id'])->count();
         $lastpay = $debtor->last_payment_date;
+
+
+        $itemPrice = Item::where('item_id', $data['item_id'])->value('price');
+        $itemName = Item::where('item_id', $data['item_id'])->value('item_name');
+        $totalPrice = $itemPrice * $data['quantity'];
+
+
+        $totalDebt = Uthang::sum('total');
+
 
 
         if ($uthangsCount > 0 && $debtor->due_date === null) {
@@ -60,8 +70,6 @@ class UthangController extends Controller
         }
         
         
-        $itemPrice = Item::where('item_id', $data['item_id'])->value('price');
-        $totalPrice = $itemPrice * $data['quantity'];
 
         $uthang = new Uthang([
             'd_id' => $data['d_id'], 
@@ -75,18 +83,35 @@ class UthangController extends Controller
 
         $uthang->save();
 
+        History::create([
+            'transaction' => "Added new utang {$itemName} x{$data['quantity']}", 
+            'd_id' => $data['d_id'],
+            'price' => $totalPrice,
+            'name' => $debtor->d_name,
+            'date' => now()
+        ]);
 
+        \DB::commit();
 
         return response()->json(['message' => 'Uthang added successfully'], 201);
     } catch (\Exception $e) {
-        if (strpos($e->getMessage(), 'Total price exceeds 1000 for this item') !== false) {
-            return response()->json(['error' => 'Total price exceeds 1000 for this item'], 400);
-        } if (strpos($e->getMessage(), 'Exceeded maximum total of Debt') !== false) {
-            return response()->json(['error' => 'Exceeded maximum total of Debt'], 400);
-        } else {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+
+        \DB::rollBack();
+    if (strpos($e->getMessage(), 'Total price exceeds 1000 for this item') !== false) {
+        \Log::error('Error: Total price exceeds 1000 for this item');
+        return response()->json(['error' => 'Total price exceeds 1000 for this item'], 400);
+    } if (strpos($e->getMessage(), 'Exceeded maximum total of Debt for this debtor') !== false) {
+        \Log::error('Error: Exceeded maximum total of Debt for this debtor');
+        return response()->json(['error' => 'Exceeded maximum total of Debt for this debtor'], 400);
+    } if (strpos($e->getMessage(), 'Exceeded maximum total of Debt') !== false) {
+        \Log::error('Error: Exceeded maximum total of Debt');
+        return response()->json(['error' => 'Exceeded maximum total of Debt'], 400);
+    } else {
+        \Log::error('Unexpected error: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
     
 }
 

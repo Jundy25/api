@@ -13,6 +13,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ResetPassController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\LimitController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -63,5 +64,9 @@ Route::post('/addutang', [UthangController::class, 'addUthang']);
 Route::put('/updateutang/{id}', [UthangController::class, 'updateUthang']);
 Route::delete('/payutang/{u_id}', [UthangController::class, 'deleteUthang']);
 Route::delete('/deleteutangs/{id}', [DebtorsController::class, 'deleteUtangs']);
+Route::get('/overAllLimit', [LimitController::class, 'inventoryLimit']);
+Route::get('/debtorLimit', [LimitController::class, 'limitByDebtor']);
+Route::get('/interest', [LimitController::class, 'interest']);
+Route::put('/updatelimit', [LimitController::class, 'update']);
 });
 
